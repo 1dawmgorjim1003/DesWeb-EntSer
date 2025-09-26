@@ -38,39 +38,41 @@ function cargarTablero($rutaCSV) {
 $archivoCSV = __DIR__ . '/data/tablero.csv';
 $tablero = cargarTablero($archivoCSV);
 
-function cargarPosicionPersonaje() {
-    //Creamos la posición aleatoria de nuestro personaje con random_int.
-    $rand = random_int(0,143);
-    return $rand;
+function cargarPersonaje() {
+    if (isset($_GET['col']) && isset($_GET['fila'])) {
+        $error = 'Se han introducido posiciones no válidas';
+    } 
 }
 
-//Cargamos la posición del personaje en la variable $posicionPersonaje.
-$posicionPersonaje = cargarPosicionPersonaje();
+//Cogemos posiciones de URL en la parte cliente (http://localhost/dESWeb-EntServ/UT3/Acts/index.php?col=4&fila=4)
 
 //LÓGICA DE PRESENTACIÓN
-function getTableroMarkup($tableroData, $posicionPersonaje){
-    //Creamos un contador para ir sabiendo que posición estamos pintando
-    $cont = 0;
+function getTableroMarkup($tableroData){
+    //Creamos un contador para ir sabiendo el numero de columna y el numero de fila
+    $contFilas = 0;
+    $contColumnas = 0;
     $output = '';
     //Recorre cada posición I del array de arrays
     foreach($tableroData as $filaIndex => $datosFila){
         // Recorre cada posición J del array de arrays
+        $contFilas++;
         foreach($datosFila as $columnaIndex => $tileType){
-            //Vamos sumando nuestro contador
-            $cont ++;
-            //Si la ultima casilla pintada es igual a la posición del personaje, pintamos nuestro personaje, si no seguimos pintando tiles.
-            if ($cont == $posicionPersonaje) {
+            //Vamos sumando nuestro de columnas
+            $contColumnas++;
+            /*Si el numero de columna y el numero de fila corresponde con el numero de columna y fila
+            pasado en el cliente se pinta */
+            if (($contColumnas == $_GET['col'] && $contFilas == $_GET['fila']) && $esValido = true) {
                 $output .= '<div class="tile '.$tileType.'"><img src="./src/character.png" width: 25px; height: 25px;/></div>';
             } else {
                 $output .= '<div class="tile '.$tileType.'"></div>';
             }
         }
-        
+        $contColumnas = 0;
     }
     return $output;
 }
 
-$tableroMarkup = getTableroMArkup($tablero, $posicionPersonaje);
+$tableroMarkup = getTableroMArkup($tablero);
 
 //Lógica de negocio
 //El tablero es un array bidimensional en el que cada fila contiene 12 palabras cuyos valores pueden ser:
@@ -135,5 +137,6 @@ $tableroMarkup = getTableroMArkup($tablero, $posicionPersonaje);
     <div class="contenedorTablero">
         <?php echo $tableroMarkup; ?>
     </div>
+    <p style="display: none;" class="Error">No se ha podido imprimir el personaje. Se han dado posiciones inválidas</p>
 </body>
 </html>
