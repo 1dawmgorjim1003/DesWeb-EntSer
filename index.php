@@ -38,34 +38,42 @@ function cargarTablero($rutaCSV) {
 $archivoCSV = __DIR__ . '/data/tablero.csv';
 $tablero = cargarTablero($archivoCSV);
 
-function cargarPersonaje() {
-    if (isset($_GET['col']) && isset($_GET['fila'])) {
-        $error = 'Se han introducido posiciones no válidas';
-    } 
-}
-
 //Cogemos posiciones de URL en la parte cliente (http://localhost/dESWeb-EntServ/UT3/Acts/index.php?col=4&fila=4)
+//Creamos una función para comprobar las posiciones del personaje
+function cargarPersonaje() {
+    //Si las variables col y fila existen, seguimos preguntando. Si no existen y por lo tanto son null, se devuelve false
+    if (isset($_GET['col']) && isset($_GET['fila'])) {
+        //Si col y fila no son mayores de 13 devolvemos un array con nuestras posiciones
+        if ($_GET['col'] < 13 && $_GET['fila'] < 13) {
+            return [$_GET['col'], $_GET['fila']];
+        }
+    }
+    return false;
+}
 
 //LÓGICA DE PRESENTACIÓN
 function getTableroMarkup($tableroData){
     //Creamos un contador para ir sabiendo el numero de columna y el numero de fila
     $contFilas = 0;
     $contColumnas = 0;
+    //Cargamos la salida de cargarPersonaje() en una variable
+    $outputCargarPersonaje = cargarPersonaje();
     $output = '';
     //Recorre cada posición I del array de arrays
     foreach($tableroData as $filaIndex => $datosFila){
         // Recorre cada posición J del array de arrays
         $contFilas++;
         foreach($datosFila as $columnaIndex => $tileType){
-            //Vamos sumando nuestro de columnas
+            //Vamos sumando nuestro de columnas y pintando tiles
             $contColumnas++;
-            /*Si el numero de columna y el numero de fila corresponde con el numero de columna y fila
-            pasado en el cliente se pinta */
-            if (($contColumnas == $_GET['col'] && $contFilas == $_GET['fila']) && $esValido = true) {
-                $output .= '<div class="tile '.$tileType.'"><img src="./src/character.png" width: 25px; height: 25px;/></div>';
-            } else {
-                $output .= '<div class="tile '.$tileType.'"></div>';
+            $output .= '<div class="tile '.$tileType.'">';
+            /*Si $outputCargarPersonaje no es false, $contColumnas es igual a la posición 0 de nuestro array y $contFilas es igual a la
+            posición 1 del array se pinta el personaje, si no es así se siguen pintando tiles sin cargar el personaje */
+            if (($outputCargarPersonaje != false)&& ($contColumnas == $outputCargarPersonaje[0] && $contFilas == $outputCargarPersonaje[1])) {
+                $output .= '<img src="./src/character.png" width: 25px; height: 25px;/>';
             }
+            $output .= '</div>';
+            
         }
         $contColumnas = 0;
     }
@@ -73,6 +81,18 @@ function getTableroMarkup($tableroData){
 }
 
 $tableroMarkup = getTableroMArkup($tablero);
+
+//Creamos una función para pintar un mensaje de error o de éxito
+function displayError() {
+    $output;
+    //Si la función devuelve false indicamos que no ha sido posible pintar el personaje. Si devuelve true, confirmamos que se ha pintado
+    if (cargarPersonaje() == false) {
+        $output = '<p>El personaje no ha podido cargarse correctamente. Se han dado posiciones inválidas o no se han indicado.</p>';
+    } else {
+        $output = '<p>El personaje se ha podido cargar correctamente.</p>';
+    }
+    return $output;
+}
 
 //Lógica de negocio
 //El tablero es un array bidimensional en el que cada fila contiene 12 palabras cuyos valores pueden ser:
@@ -137,6 +157,6 @@ $tableroMarkup = getTableroMArkup($tablero);
     <div class="contenedorTablero">
         <?php echo $tableroMarkup; ?>
     </div>
-    <p style="display: none;" class="Error">No se ha podido imprimir el personaje. Se han dado posiciones inválidas</p>
+    <?php echo displayError() ?>
 </body>
 </html>
