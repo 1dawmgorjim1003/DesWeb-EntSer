@@ -14,21 +14,14 @@ function dump($var){
 //LÓGICA DE NEGOCIO
 function cargarTablero($rutaCSV) {
     $tablero = [];
-    //Se comprueba si el archivo existe y tiene permisos de lectura
     if (!is_readable($rutaCSV)) {
         echo 'No se puede leer el fichero CSV: ' . $rutaCSV;
     } else {
-        //Se abre el fichero en modo lectura (fopen y r de read)
         if (($puntero = fopen($rutaCSV, 'r')) !== false) {
-            //Se lee el fichero línea a línea. Cada línea es un array, se separa por comas
-            /*El separador por defecto es la coma, si lo quiero cambiar es fgetcsv($puntero, 0, ";"); El 0 indica que la longitud de la linea es ilimitada */ 
             while (($fila = fgetcsv($puntero)) !== false) {
-                //Ignora líneas vacías, si esta vacía se pasa a la siguiente línea
                 if ($fila === null || $fila === [null]) { continue; }
-                //Vamos añadiendo la fila leída a $tablero
                 $tablero[] = $fila;
             }
-            // Cerramos la lectura del fichero
             fclose($puntero);
         }
         return $tablero;
@@ -38,8 +31,6 @@ function cargarTablero($rutaCSV) {
 $archivoCSV = __DIR__ . '/data/tablero.csv';
 $tablero = cargarTablero($archivoCSV);
 
-//Cogemos posiciones de URL en la parte cliente (http://localhost/dESWeb-EntServ/UT3/Acts/index.php?col=4&row=4)
-//Creamos una función para comprobar las posiciones del personaje
 function leerInput(){
     
     $col = filter_input(INPUT_GET, 'col', FILTER_VALIDATE_INT);
@@ -73,17 +64,29 @@ $posPersonaje = leerInput();
 $tableroMarkup = getTableroMArkup($tablero, $posPersonaje);
 
 
-
-//Creamos una función para pintar un mensaje de error o de éxito
 function displayError() {
     $output;
-    //Si la función devuelve false indicamos que no ha sido posible pintar el personaje. Si devuelve true, confirmamos que se ha pintado
     if (leerInput() == null) {
         $output = '<p>El personaje no ha podido cargarse correctamente. Se han dado posiciones inválidas o no se han indicado.</p>';
     } else {
         $output = '<p>El personaje se ha podido cargar correctamente.</p>';
     }
     return $output;
+}
+
+function getArrowsMarkup($posPersonaje) {
+    $arriba = '?row=' . ($posPersonaje['row']-1) . '&col=' . $posPersonaje['col'];
+    $abajo = '?row=' . ($posPersonaje['row']+1) . '&col=' . $posPersonaje['col'];
+    $derecha = '?row=' . ($posPersonaje['row']) . '&col=' . ($posPersonaje['col']-1);
+    $izquierda = '?row=' . ($posPersonaje['row']) . '&col=' . ($posPersonaje['col']+1);
+
+    $output = '
+        <a href="' . $arriba . '">Arriba</a>
+        <a href="' . $abajo . '">Abajo</a>
+        <a href="' . $izquierda . '">Izquierda</a>
+        <a href="' . $derecha . '">Derecha</a>';
+    return $output;
+    
 }
 
 //Lógica de negocio
@@ -149,6 +152,7 @@ function displayError() {
     <div class="contenedorTablero">
         <?php echo $tableroMarkup; ?>
     </div>
+    <?php echo getArrowsMarkup($posPersonaje) ?>
     <?php echo displayError() ?>
 </body>
 </html>
