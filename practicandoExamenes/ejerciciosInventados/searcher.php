@@ -35,17 +35,35 @@ function readInput() {
     return null;
 }
 
-function createMessages($fileMarkup, $search) {
+function createMessage($file, $search) {
+    $isFinded = false;
     $output = '';
-    if(isset($fileMarkup)) {
-        $output = 'No se encontraron resultados para "' . $search . '"';
-        return $output;
+    if(isset($file)) {
+        foreach($file as $rowIndex => $rowData) {
+            foreach($rowData as $colIndex => $colData) {
+                if ($search == $colData) {
+                    $isFinded = true;
+                }
+            }
+        }
     }
+
+    if ($isFinded == true) {
+        $output = 'Se ha encontrado la palabra "' . $search . '"';
+    } else {
+        $output = 'No se ha encontrado la palabra "' . $search .'"';
+    }
+
+    return $output;
+
 }
+
+
 
 $routeFile = "data/words.csv";
 $file = readCSVFile($routeFile);
 $search = readInput();
+$output = createMessage($file, $search);
 //dump($file);
 
 //LÓGICA DE PRESENTACIÓN
@@ -55,7 +73,7 @@ function getFileMarkup($file, $search) {
         foreach($file as $rowIndex => $rowData) {
             foreach($rowData as $colIndex => $colData) {
                 if(isset($search)) {
-                    if($colData == $search) {
+                    if($search == $colData) {
                         $output .= '<p>' . $colData . '</p>';
                     }
                 } else {
@@ -65,23 +83,23 @@ function getFileMarkup($file, $search) {
         }
     }
     return $output;
+
+
 }
 
-function getMessagesMarkup($messages, $fileMarkup) {
-    $output = '';
-    if(isset($fileMarkup)) {
-        $output = '<p>' . $messages . '</p>';
+function getMessageMarkup($output, $search) {
+    if ($search !== null) {
+        $output = '<p>' . $output . '</p>';
         return $output;
     }
-    $output = 'OK';
-    return $output;
 }
 
+
+
 $fileMarkup = getFileMarkup($file, $search);
+$messageaMarkup = getMessageMarkup($output, $search);
 //dump($fileMarkup);
-$messages = createMessages($fileMarkup, $search);
 //dump($messages);
-$messagesMarkup = getMessagesMarkup($messages, $fileMarkup);
 
 ?>
 <!DOCTYPE html>
@@ -92,10 +110,16 @@ $messagesMarkup = getMessagesMarkup($messages, $fileMarkup);
     <title>Document</title>
 </head>
 <body>
+    <form action="<?=$_SERVER['PHP_SELF']?>" method="get">
+        <input type="text" name="buscar">
+        <input type="submit" value="Buscar palabra">
+    </form>
+    <br>
+    <a href="<?=$_SERVER['PHP_SELF']?>">Volver al listado de palabras</a>
     <div>
         <?php echo $fileMarkup;?>
     </div>
     <br>
-    <?php echo $messagesMarkup;?>
+    <?php echo $messageaMarkup;?>
 </body>
 </html>

@@ -12,6 +12,13 @@ function dump($var){
 }
 
 //LÓGICA DE NEGOCIO
+function processURL() {
+    if (count($_GET) == 0) {
+        header('Location: index.php?col=0&row=0');
+        exit();
+    }
+}
+
 function cargarTablero($rutaCSV) {
     $tablero = [];
     if (!is_readable($rutaCSV)) {
@@ -32,7 +39,6 @@ $archivoCSV = __DIR__ . '../../data/tablero.csv';
 $tablero = cargarTablero($archivoCSV);
 
 function leerInput(){
-    
     $col = filter_input(INPUT_GET, 'col', FILTER_VALIDATE_INT);
     $row = filter_input(INPUT_GET, 'row', FILTER_VALIDATE_INT);
 
@@ -69,7 +75,6 @@ function getArrows($posPersonaje) {
     }
     return null;
 }
-
 
 //LÓGICA DE PRESENTACIÓN
 function getTableroMarkup ($tablero, $posPersonaje){
