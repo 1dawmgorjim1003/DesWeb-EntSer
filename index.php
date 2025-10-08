@@ -1,10 +1,11 @@
 <?php
 
-/*INICIALIZACIÓN DE ENTORNO */
+//INICIALIZACIÓN DEL ENTORNO
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+<<<<<<< HEAD
 /*Zona de declaración de funciones */
 //FUNCIÓN DE DEBUGUEO
 function dump($var){
@@ -59,11 +60,17 @@ function getTableroMarkup ($tablero, $posPersonaje){
     }
     return $output;
 }
+=======
+include('lib/functions.php');
+>>>>>>> 26f53a54c9cd81c99d848f71af3ac2ff26268430
 
+//LOGICA DE NEGOCIO
 $posPersonaje = leerInput();
-$tableroMarkup = getTableroMArkup($tablero, $posPersonaje);
+$arrows = getArrows($posPersonaje);
+$tablero = cargarTablero('data/tablero.csv');
 
 
+<<<<<<< HEAD
 function displayError() {
     $output;
     if (leerInput() == null) {
@@ -98,9 +105,13 @@ function getArrowsMarkup($posPersonaje) {
 
 //Lógica de presentación
 
+=======
+//LOGICA DE PRESENTACIÓN
+$tableroMarkup = getTableroMarkup($tablero, $posPersonaje);
+$arrowsMarkup = getArrowsMarkup($arrows);
+>>>>>>> 26f53a54c9cd81c99d848f71af3ac2ff26268430
 
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -149,8 +160,11 @@ function getArrowsMarkup($posPersonaje) {
 </head>
 <body>
     <h1>Tablero juego super rol DWES</h1>
+    <div style="display: flex;">
+        <?php echo $arrowsMarkup; ?>
+    </div>
     <div class="contenedorTablero">
-        <?php echo $tableroMarkup; ?>
+        <?php echo $tableroMarkup;?>
     </div>
     <?php echo getArrowsMarkup($posPersonaje) ?>
     <?php echo displayError() ?>
