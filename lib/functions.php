@@ -1,80 +1,102 @@
 <?php
-
-/*INICIALIZACIÓN DE ENTORNO */
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-/*Zona de declaración de funciones */
-//FUNCIÓN DE DEBUGUEO
+/* Zona de declaración de funciones */
+//*******Funciones de debugueo****
 function dump($var){
+    global $miVariable;
+    echo $miVariable;
     echo '<pre>'.print_r($var,1).'</pre>';
 }
 
 //LÓGICA DE NEGOCIO
-function processURL() {
-    if (count($_GET) == 0) {
-        header('Location: index.php?col=0&row=0');
-        exit();
-    }
-}
-
-function cargarTablero($rutaCSV) {
+function leerArchivoCSV($rutaArchivoCSV) {
     $tablero = [];
-    if (!is_readable($rutaCSV)) {
-        echo 'No se puede leer el fichero CSV: ' . $rutaCSV;
-    } else {
-        if (($puntero = fopen($rutaCSV, 'r')) !== false) {
-            while (($fila = fgetcsv($puntero)) !== false) {
-                if ($fila === null || $fila === [null]) { continue; }
-                $tablero[] = $fila;
-            }
-            fclose($puntero);
+
+    if (($puntero = fopen($rutaArchivoCSV, "r")) !== FALSE) {
+        while (($datosFila = fgetcsv($puntero)) !== FALSE) {
+            $tablero[] = $datosFila;
         }
-        return $tablero;
+        fclose($puntero);
     }
+
+    return $tablero;
 }
 
-$archivoCSV = __DIR__ . '../../data/tablero.csv';
-$tablero = cargarTablero($archivoCSV);
+/*function procesaRedirect(){
+    if((!isset($_GET['col']))&&(!isset($_GET['row']))){
+        header("HTTP/1.1 308 Permanent Redirect");
+        header('Location: ./index.php?row=0&col=0');
+    }
+}*/
 
-function leerInput(){
-    $col = filter_input(INPUT_GET, 'col', FILTER_VALIDATE_INT);
-    $row = filter_input(INPUT_GET, 'row', FILTER_VALIDATE_INT);
+function procesarInput(){
+    
 
-    return ((isset($col) && is_numeric($col)) && (isset($row)) && is_numeric($row))? array(
+    $posPersonajeSerializada = filter_input(INPUT_POST, 'pos_personaje', FILTER_DEFAULT);
+
+    $col = filter_input(INPUT_POST, 'col', FILTER_VALIDATE_INT);
+    $row = filter_input(INPUT_POST, 'row', FILTER_VALIDATE_INT);
+
+    $direccion = filter_input(INPUT_POST, 'direccion', FILTER_DEFAULT);
+    $posPersonaje= (isset($col) && is_int($col) && isset($row) && is_int($row))? array(
             'row' => $row,
             'col' => $col
-        ) : null;    
-
+        ) : array(
+            'row' => 0,
+            'col' => 0,
+        );
+    if(isset($direccion)){
+        switch($direccion){
+            case 'arriba':
+                $posPersonaje['row']--;
+            break;
+            case 'abajo':
+                $posPersonaje['row']++;
+            break;
+            case 'derecha':
+                $posPersonaje['col']++;
+            break;
+            case 'izquierda':
+                $posPersonaje['col']--;
+            break;
+        }
+    }
+    return $posPersonaje;
+    
 }
 
-$posPersonaje = leerInput();
+function getMensajes(&$posPersonaje){
+    if(!isset($posPersonaje)){
+        return array('La posición del personaje no está bien definida');
+    }
+    return array('');
+}
 
-function getArrows($posPersonaje) {
-    if(isset($posPersonaje)) {
+/*function getArrows($posPersonaje){
+    if(isset($posPersonaje)){
+
         $arrows = array(
-            'arriba' => array(
-                'col' => $posPersonaje['col'],
-                'row'=> $posPersonaje['row'] - 1,
-            ),
-            'abajo' => array(
-                'col' => $posPersonaje['col'],
-                'row' => $posPersonaje['row'] + 1,
-            ),
             'izquierda' => array(
-                'col'=> $posPersonaje['col'] - 1,
                 'row' => $posPersonaje['row'],
+                'col' => $posPersonaje['col'] -1,
+            ),
+            'arriba' => array(
+                'row' => $posPersonaje['row'] -1,
+                'col' => $posPersonaje['col'] ,
             ),
             'derecha' => array(
-                'col' => $posPersonaje['col'] + 1,
                 'row' => $posPersonaje['row'],
+                'col' => $posPersonaje['col'] +1,
+            ),
+            'abajo' => array(
+                'row' => $posPersonaje['row'] +1,
+                'col' => $posPersonaje['col'],
             ),
         );
         return $arrows;
     }
     return null;
-}
+
+}*/
 
 //LÓGICA DE PRESENTACIÓN
 function getTableroMarkup ($tablero, $posPersonaje){
@@ -82,9 +104,7 @@ function getTableroMarkup ($tablero, $posPersonaje){
     foreach ($tablero as $filaIndex => $datosFila) {
         foreach ($datosFila as $columnaIndex => $tileType) {
             if(isset($posPersonaje)&&($filaIndex == $posPersonaje['row'])&&($columnaIndex == $posPersonaje['col'])){
-                if ($posPersonaje['row'] >= 0 && $posPersonaje['row'] < 12 && $posPersonaje['col'] >= 0 && $posPersonaje['col'] < 12) {
-                    $output .= '<div class = "tile ' . $tileType . '"><img src="src/character.png"></div>';    
-                }
+                $output .= '<div class = "tile ' . $tileType . '"><img src="src/character.png"></div>';    
             }else{
                 $output .= '<div class = "tile ' . $tileType . '"></div>';
             }
@@ -92,43 +112,27 @@ function getTableroMarkup ($tablero, $posPersonaje){
     }
     return $output;
 }
-
-$tableroMarkup = getTableroMArkup($tablero, $posPersonaje);
-
-function displayError() {
-    $output;
-    global $posPersonaje;
-    if (leerInput() == null) {
-        $output = '<p>El personaje no ha podido cargarse correctamente. No se han indicado posiciones.</p>';
-    } else {
-        if ($posPersonaje['row'] >= 0 && $posPersonaje['row'] < 12 && $posPersonaje['col'] >= 0 && $posPersonaje['col'] < 12) {
-            $output = '<p>El personaje se ha podido cargar correctamente.</p>';
-        } else {
-            $output = '<p>El personaje no ha podido cargarse correctamente. Se han dado posiciones inválidas.</p>';
-        }
-        
-    }
-    return $output;
-}
-
-function getArrowsMarkup($arrows) {
+function getMensajesMarkup($arrayMensajes){
     $output = '';
-    if (isset($arrows)) {
-        foreach ($arrows as $arrayI => $arrayJ) {
-            $output .= '<p><a href="index.php?col='.$arrayJ['col'].'&row='.$arrayJ['row'].'">'.$arrayI.'</a></p><p>// </p>';
-        }
+    foreach ($arrayMensajes as $mensaje){
+        $output .= '<p>'.$mensaje.'</p>';
     }
     return $output;
+    
 }
-
-//Lógica de negocio
-//El tablero es un array bidimensional en el que cada fila contiene 12 palabras cuyos valores pueden ser:
-// agua
-// fuego
-// tierra
-// hierba
-
-//Lógica de presentación
-
-
-?>
+function getFormMarkup($posPersonaje){
+    
+    $output = '<form action="'.$_SERVER['PHP_SELF'].'" method="post">
+        <input type="submit" name="direccion" value="arriba">
+        <input type="submit" name="direccion" value="izquierda">
+        <input type="submit" name="direccion" value="derecha">
+        <input type="submit" name="direccion" value="abajo">';
+    if(isset($posPersonaje)){
+        //$output .= //'<input type="hidden" name="pos_personaje" value="'.serialize($posPersonaje).'">';
+        $output .= '<input type="hidden" name="col" value="'.$posPersonaje['col'].'">
+        <input type="hidden" name="row" value="'.$posPersonaje['row'].'">';
+    }
+    $output.='</form>';
+    
+    return $output;   
+}
