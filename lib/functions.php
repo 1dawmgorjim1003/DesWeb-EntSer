@@ -2,10 +2,9 @@
 /* Zona de declaración de funciones */
 //*******Funciones de debugueo****
 function dump($var){
-    global $miVariable;
-    echo $miVariable;
     echo '<pre>'.print_r($var,1).'</pre>';
 }
+
 
 //LÓGICA DE NEGOCIO
 function leerArchivoCSV($rutaArchivoCSV) {
@@ -30,38 +29,38 @@ function leerArchivoCSV($rutaArchivoCSV) {
 
 function procesarInput(){
     
+    $posPersonajeActual = filter_input(INPUT_POST, 'pos_personaje', FILTER_DEFAULT);
+    
+    
+    $posPersonajeActual = isset($posPersonajeActual)?unserialize(base64_decode($posPersonajeActual)):array(
+        'row' => 0,
+        'col' => 0,
+    );
+    
+    $col = $posPersonajeActual['col'];
+    $row = $posPersonajeActual['row'];
 
-    $posPersonajeSerializada = filter_input(INPUT_POST, 'pos_personaje', FILTER_DEFAULT);
-
-    $col = filter_input(INPUT_POST, 'col', FILTER_VALIDATE_INT);
-    $row = filter_input(INPUT_POST, 'row', FILTER_VALIDATE_INT);
+    
 
     $direccion = filter_input(INPUT_POST, 'direccion', FILTER_DEFAULT);
-    $posPersonaje= (isset($col) && is_int($col) && isset($row) && is_int($row))? array(
-            'row' => $row,
-            'col' => $col
-        ) : array(
-            'row' => 0,
-            'col' => 0,
-        );
+    
     if(isset($direccion)){
         switch($direccion){
             case 'arriba':
-                $posPersonaje['row']--;
+                $posPersonajeActual['row']--;
             break;
             case 'abajo':
-                $posPersonaje['row']++;
+                $posPersonajeActual['row']++;
             break;
             case 'derecha':
-                $posPersonaje['col']++;
-            break;
-            case 'izquierda':
-                $posPersonaje['col']--;
-            break;
+                $posPersonajeActual['col']++;
+           break;
+           case 'izquierda':
+                $posPersonajeActual['col']--;
+            break;    
         }
     }
-    return $posPersonaje;
-    
+    return $posPersonajeActual;
 }
 
 function getMensajes(&$posPersonaje){
@@ -104,7 +103,7 @@ function getTableroMarkup ($tablero, $posPersonaje){
     foreach ($tablero as $filaIndex => $datosFila) {
         foreach ($datosFila as $columnaIndex => $tileType) {
             if(isset($posPersonaje)&&($filaIndex == $posPersonaje['row'])&&($columnaIndex == $posPersonaje['col'])){
-                $output .= '<div class = "tile ' . $tileType . '"><img src="src/character.png"></div>';    
+                $output .= '<div class = "tile ' . $tileType . '"><img src="./src/character.png"></div>';    
             }else{
                 $output .= '<div class = "tile ' . $tileType . '"></div>';
             }
@@ -128,11 +127,12 @@ function getFormMarkup($posPersonaje){
         <input type="submit" name="direccion" value="derecha">
         <input type="submit" name="direccion" value="abajo">';
     if(isset($posPersonaje)){
-        //$output .= //'<input type="hidden" name="pos_personaje" value="'.serialize($posPersonaje).'">';
-        $output .= '<input type="hidden" name="col" value="'.$posPersonaje['col'].'">
-        <input type="hidden" name="row" value="'.$posPersonaje['row'].'">';
+        $output .= '<input type="hidden" name="pos_personaje" value="'.base64_encode(serialize($posPersonaje)).'">';
+        //$output .= '<input type="hidden" name="col" value="'.$posPersonaje['col'].'">
+        //<input type="hidden" name="row" value="'.$posPersonaje['row'].'">';
     }
     $output.='</form>';
     
     return $output;   
 }
+

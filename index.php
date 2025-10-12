@@ -11,6 +11,7 @@ include_once('lib/functions.php');
 /***** Lógica de negocio ******/
 //procesaRedirect();
 $posPersonaje = procesarInput();
+dump($posPersonaje);
 
 //$arrows = getArrows($posPersonaje);
 
